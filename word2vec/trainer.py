@@ -6,7 +6,7 @@ import json
 import os
 
 from word2vec.utils import load_cfg
-from word2vec.dataset import StanfordSentiment, Word2vecDataset
+from word2vec.dataset import WebTexts, Word2vecDataset
 from word2vec.skip_gram import SkipGram
 
 class Word2VecTrainer:
@@ -15,7 +15,7 @@ class Word2VecTrainer:
 
         args = load_cfg(config_path)
         self.args = args
-        self.data = StanfordSentiment(args)
+        self.data = WebTexts(args)
         self.dataset = Word2vecDataset(self.data)
 
         self.id2token = self.dataset.sst_data.id2token

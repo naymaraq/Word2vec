@@ -5,7 +5,7 @@ import json
 import random
 from tqdm import tqdm
 
-class StanfordSentiment:
+class WebTexts:
     """
     Stanford Sentiment Treebank reader
     """
@@ -28,7 +28,6 @@ class StanfordSentiment:
         self.token_count = 0
 
         self.tablesize = 10000000
-
         self.negpos = 0
 
 
@@ -131,28 +130,17 @@ class StanfordSentiment:
 
         return self.all_sentences
 
-    def get_sentences(self, file_type="json"):
+    def get_sentences(self):
 
         if hasattr(self, 'sentences') and any(self.sentences):
             return self.sentences
 
         sentences = []
-        if file_type == "txt":
-            with open(self.input_file, "r") as f:
-                first = True
-                for line in f:
-                    if first:
-                        first = False
-                        continue
 
-                    splitted = line.strip().split()[1:]
-                    sentences += [[w.lower() for w in splitted]]
-
-        elif file_type == "json":
-            texts = json.load(open(self.input_file))
-            for d,text in texts.items():
-                splitted = text.strip().split(' ')
-                sentences += [[w.lower() for w in splitted]]
+        texts = json.load(open(self.input_file))
+        for d,text in texts.items():
+            splitted = text.strip().split(' ')
+            sentences += [[w.lower() for w in splitted]]
 
         self.sentences = sentences
         return self.sentences
