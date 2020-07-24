@@ -3,6 +3,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import json
+import os
 
 from word2vec.utils import load_cfg
 from word2vec.dataset import StanfordSentiment, Word2vecDataset
