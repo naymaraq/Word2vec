@@ -41,7 +41,7 @@ class Word2VecTrainer:
     def train(self):
 
         optimizer = optim.SparseAdam(self.skip_gram_model.parameters(), lr=self.initial_lr)
-        path_to_save = os.path.join(self.args["output_folder"], "word_vectors_.npy")
+        path_to_save = os.path.join(self.args["output_folder"], "word_vectors.npy")
 
         for iteration in range(self.iterations):
 
