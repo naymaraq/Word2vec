@@ -39,7 +39,7 @@ class StanfordSentiment:
 
         C = self.window_size
         allsent = self.get_all_sentences()
-        sent_id = sent_id% len(allsent)
+        sent_id = sent_id%len(allsent)
         #sent_id = random.randint(0, len(allsent) - 1)
 
         sent = allsent[sent_id]
@@ -81,7 +81,7 @@ class StanfordSentiment:
                 j += 1
             self.sample_table[i] = j
 
-        np.random.shuffle(self.sample_table)
+        #np.random.shuffle(self.sample_table)
         return self.sample_table
 
     def num_sentences(self):
@@ -96,8 +96,7 @@ class StanfordSentiment:
         if hasattr(self, 'sampling_probs') and any(self.sampling_probs):
             return self.sampling_probs
 
-        threshold = 1e-5 * self.token_count
-
+        threshold = 1e-6 * self.token_count
         n_tokens = len(self.token2id)
         sampling_probs = np.zeros((n_tokens,))
         for w, i in self.token2id.items():
@@ -117,7 +116,7 @@ class StanfordSentiment:
         sampling_probs = self.sub_sampling_prob()
 
 
-        allsentences = [[w for w in s if random.random() >= sampling_probs[token2id[w]]] for s in sentences*2]
+        allsentences = [[w for w in s if random.random() >= sampling_probs[token2id[w]]] for s in sentences*5]
         allsentences = [s for s in allsentences if len(s) > 1]
 
         self.all_sentences = allsentences

@@ -4,7 +4,7 @@ window_size: 5
 num_of_negatives: 10
 batch_size: 256
 emb_dim: 100
-epochs: 300
+epochs: 500
 initial_lr: 0.01
 use_cuda: true
 
