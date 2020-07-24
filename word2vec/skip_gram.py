@@ -16,7 +16,7 @@ class SkipGram(nn.Module):
 
         initrange = 1.0 / self.emb_dim
         init.uniform_(self.center_embeddings.weight.data, -initrange, initrange)
-        init.constant_(self.context_embeddings.weight.data, 0)
+        init.uniform_(self.context_embeddings.weight.data, -initrange, initrange)
 
     def forward(self, center_w, context_w, negative_ws):
 
@@ -25,20 +25,18 @@ class SkipGram(nn.Module):
         neg_s = self.context_embeddings(negative_ws)
 
         pos_score = torch.sum(torch.mul(emb_u, emb_v), dim=1)
-        #pos_score = torch.clamp(pos_score, max=10, min=-10)
         pos_score = -F.logsigmoid(pos_score)
 
         neg_score = torch.bmm(neg_s, emb_u.unsqueeze(2)).squeeze()
-        #neg_score = torch.clamp(neg_score, max=10, min=-10)
         neg_score = -torch.sum(F.logsigmoid(-neg_score), dim=1)
 
         return torch.mean(pos_score + neg_score)
 
     def save_embedding(self,file_name):
         u_emb = self.center_embeddings.weight.cpu().data.numpy()
-        #v_emb = self.context_embeddings.weight.cpu().data.numpy()
+        v_emb = self.context_embeddings.weight.cpu().data.numpy()
 
-        word_embeddings = u_emb #+ v_emb)
+        word_embeddings = u_emb + v_emb
         word_embeddings.dump(file_name)
 
 

@@ -16,11 +16,11 @@ class Word2VecTrainer:
         args = load_cfg(config_path)
         self.args = args
         self.data = StanfordSentiment(args)
-        dataset = Word2vecDataset(self.data)
+        self.dataset = Word2vecDataset(self.data)
 
-        self.id2token = dataset.sst_data.id2token
-        self.dataloader = DataLoader(dataset, batch_size=args["batch_size"],
-                                     shuffle=False, num_workers=0, collate_fn=dataset.collate)
+        self.id2token = self.dataset.sst_data.id2token
+        self.dataloader = DataLoader(self.dataset, batch_size=args["batch_size"],
+                                     shuffle=True, num_workers=0,collate_fn=self.dataset.collate)
 
         self.vocab_size = len(self.data.token2id)
         self.emb_dim = args["emb_dim"]
@@ -35,14 +35,20 @@ class Word2VecTrainer:
         if self.use_cuda:
             self.skip_gram_model.cuda()
 
+        #print(self.data.get_random_context(10))
+
 
     def train(self):
 
         optimizer = optim.SparseAdam(self.skip_gram_model.parameters(), lr=self.initial_lr)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(self.dataloader))
+        #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
+        #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(self.dataloader))
         path_to_save = os.path.join(self.args["output_folder"],"word_vectors.npy")
 
-        for iteration in tqdm(range(self.iterations)):
+        
+
+        for iteration in range(self.iterations):
+
 
             running_loss = 0.0
             for i, sample_batched in enumerate(self.dataloader):
@@ -58,13 +64,11 @@ class Word2VecTrainer:
                     loss.backward()
                     optimizer.step()
                     
-                    scheduler.step()
-
 
                     running_loss = running_loss * 0.9 + loss.item() * 0.1
                 
-            if iteration%20==0:
-                print(" Loss: %f" %running_loss)
+            if (iteration+1)%self.args["print_every"]==0:
+                print("Iter {}: Loss: {}".format(iteration, running_loss))
 
             self.skip_gram_model.save_embedding(path_to_save)
 

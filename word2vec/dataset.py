@@ -1,8 +1,9 @@
 import numpy as np 
 import torch
 from torch.utils.data import Dataset
-
+import json
 import random
+from tqdm import tqdm
 
 class StanfordSentiment:
     """
@@ -26,20 +27,26 @@ class StanfordSentiment:
         self.tokenfreq = dict()
         self.token_count = 0
 
-        self.tablesize = 1000000
+        self.tablesize = 10000000
+
+        self.negpos = 0
 
 
-    def sample_token_idx(self):
-        return self.get_sample_table()[random.randint(0, self.tablesize - 1)]
+    def get_negatives(self):  
+        
+        sample_table = self.get_sample_table()
+        response = sample_table[self.negpos:self.negpos + self.k]
+        self.negpos = (self.negpos + self.k) % len(sample_table)
+        if len(response) != self.k:
+            return np.concatenate((response, sample_table[0:self.negpos]))
+        return response
 
-    def get_negatives(self):
-        return [self.sample_token_idx() for i in range(self.k)]
-
-    def get_random_context(self, sent_id):
+    def get_random_context(self, idx):
 
         C = self.window_size
         allsent = self.get_all_sentences()
-        sent_id = sent_id%len(allsent)
+
+        sent_id = idx%len(allsent)
         #sent_id = random.randint(0, len(allsent) - 1)
 
         sent = allsent[sent_id]
@@ -52,10 +59,11 @@ class StanfordSentiment:
         centerword = sent[word_id]
         context = [w for w in context if w != centerword]
 
+
         if len(context) > 0:
             return centerword, context
         else:
-            return self.get_random_context(sent_id+1)
+            return self.get_random_context(idx+1)
 
     def get_sample_table(self):
 
@@ -81,14 +89,14 @@ class StanfordSentiment:
                 j += 1
             self.sample_table[i] = j
 
-        #np.random.shuffle(self.sample_table)
+        np.random.shuffle(self.sample_table)
         return self.sample_table
 
     def num_sentences(self):
         if hasattr(self, "sentences_count") and self.sentences_count:
             return self.sentences_count
         else:
-            self.sentences_count = len(self.get_sentences())
+            self.sentences_count = len(self.get_all_sentences())
             return self.sentences_count
 
     def sub_sampling_prob(self):
@@ -96,12 +104,13 @@ class StanfordSentiment:
         if hasattr(self, 'sampling_probs') and any(self.sampling_probs):
             return self.sampling_probs
 
-        threshold = 1e-6 * self.token_count
+        threshold = self.token_count*0.7
+
         n_tokens = len(self.token2id)
         sampling_probs = np.zeros((n_tokens,))
         for w, i in self.token2id.items():
             freq = self.tokenfreq[w]
-            sampling_probs[i] = max(0, 1 - np.sqrt(threshold / freq))
+            sampling_probs[i] = np.sqrt(freq/threshold) + (freq/threshold)
 
         self.sampling_probs = sampling_probs
         return self.sampling_probs
@@ -114,29 +123,35 @@ class StanfordSentiment:
         sentences = self.get_sentences()
         token2id = self.tokens()
         sampling_probs = self.sub_sampling_prob()
-
-
-        allsentences = [[w for w in s if random.random() >= sampling_probs[token2id[w]]] for s in sentences*5]
+        
+        allsentences = [[w for w in s if w in token2id and random.random()>= sampling_probs[token2id[w]]]  for s in sentences]
         allsentences = [s for s in allsentences if len(s) > 1]
 
         self.all_sentences = allsentences
 
         return self.all_sentences
 
-    def get_sentences(self):
+    def get_sentences(self, file_type="json"):
 
         if hasattr(self, 'sentences') and any(self.sentences):
             return self.sentences
 
         sentences = []
-        with open(self.input_file, "r") as f:
-            first = True
-            for line in f:
-                if first:
-                    first = False
-                    continue
+        if file_type == "txt":
+            with open(self.input_file, "r") as f:
+                first = True
+                for line in f:
+                    if first:
+                        first = False
+                        continue
 
-                splitted = line.strip().split()[1:]
+                    splitted = line.strip().split()[1:]
+                    sentences += [[w.lower() for w in splitted]]
+
+        elif file_type == "json":
+            texts = json.load(open(self.input_file))
+            for d,text in texts.items():
+                splitted = text.strip().split(' ')
                 sentences += [[w.lower() for w in splitted]]
 
         self.sentences = sentences
@@ -158,6 +173,8 @@ class StanfordSentiment:
         idx = 0
         for w, c in sorted(self.tokenfreq.items(), key=lambda x : x[1], reverse=True):
 
+            if c < 20:
+                continue
             self.token2id[w] = idx
             self.id2token[idx] = w
             #self.tokenfreq[idx] = c
@@ -177,13 +194,11 @@ class Word2vecDataset(Dataset):
 
     def __getitem__(self, idx):
 
-        centerword, context = self.sst_data.get_random_context(idx)
 
+        samples=[]
+        centerword, context = self.sst_data.get_random_context(idx)
         c = self.token2id[centerword]
         context_word_ids =[self.token2id[w] for w in context]
-        
-
-        samples = []
         for o in context_word_ids:
             nws = self.sst_data.get_negatives()
             samples.append((c, o, nws))
@@ -194,9 +209,9 @@ class Word2vecDataset(Dataset):
     @staticmethod
     def collate(batches):
 
-        all_u = [u for batch in batches for u, _, _ in batch if len(batch) > 0]
-        all_v = [v for batch in batches for _, v, _ in batch if len(batch) > 0]
-        all_neg_v = [neg_v for batch in batches for _, _, neg_v in batch if len(batch) > 0]
+        all_u = [u for batch in batches for u, _, _ in batch]
+        all_v = [v for batch in batches for _, v, _ in batch]
+        all_neg_v = [neg_v for batch in batches for _, _, neg_v in batch]
 
         return torch.LongTensor(all_u), torch.LongTensor(all_v), torch.LongTensor(all_neg_v)
 
