@@ -13,6 +13,13 @@ A pipeline for training word embeddings using word2vec on web-scrapped corpus.
 * Just run `python3 embedding_projector.py` (it will automatically generate `logs` folder)
 * In terminal type `tensorboard --logdir logs/`
 
+## Supported features
+
+* Skip-gram
+* Batch update 
+* Negative Sampling
+* Sub-sampling of frequent word
+
 
 
 
