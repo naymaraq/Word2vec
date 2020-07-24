@@ -13,6 +13,7 @@ class Word2VecTrainer:
     def __init__(self, config_path="configs/config.yaml"):
 
         args = load_cfg(config_path)
+        self.args = args
         self.data = StanfordSentiment(args)
         dataset = Word2vecDataset(self.data)
 
@@ -38,6 +39,7 @@ class Word2VecTrainer:
 
         optimizer = optim.SparseAdam(self.skip_gram_model.parameters(), lr=self.initial_lr)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(self.dataloader))
+        path_to_save = os.path.join(self.args["output_folder"],"word_vectors.npy")
 
         for iteration in tqdm(range(self.iterations)):
 
@@ -63,9 +65,9 @@ class Word2VecTrainer:
             if iteration%20==0:
                 print(" Loss: %f" %running_loss)
 
-            self.skip_gram_model.save_embedding("embeddings/word_vectors.npy")
+            self.skip_gram_model.save_embedding(path_to_save)
 
-        json.dump(self.id2token, open("embeddings/index2word.json",'w'))
+        json.dump(self.id2token, open(os.path.join(self.args["output_folder"],"index2word.json"),'w'))
 
 tr = Word2VecTrainer()
 tr.train()
