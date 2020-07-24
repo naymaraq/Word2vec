@@ -1,20 +1,20 @@
-import os
-import numpy as np
 import json
+import os
 
+import numpy as np
 import tensorflow as tf
 from tensorboard.plugins import projector
 
-def project(word_vecs, id2word):
 
-    log_dir='logs'
+def project(word_vecs, id2word):
+    log_dir = 'logs'
     if not os.path.exists(log_dir):
         os.mkdir(log_dir)
 
     with open(os.path.join(log_dir, 'metadata.tsv'), "w") as f:
         f.write("{}\t{}\n".format("index", "word"))
         for i, word in id2word.items():
-            f.write("{}\t{}\n".format(i,word))
+            f.write("{}\t{}\n".format(i, word))
 
     weights = tf.Variable(word_vecs)
     checkpoint = tf.train.Checkpoint(embedding=weights)
@@ -30,8 +30,6 @@ def project(word_vecs, id2word):
     projector.visualize_embeddings(log_dir, config)
 
 
-
-
 def normalize_rows(x):
     """ Row normalization function
 
@@ -39,17 +37,12 @@ def normalize_rows(x):
     unit length.
     """
     N = x.shape[0]
-    x /= np.sqrt(np.sum(x**2, axis=1)).reshape((N,1)) + 1e-30
+    x /= np.sqrt(np.sum(x ** 2, axis=1)).reshape((N, 1)) + 1e-30
     return x
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     id2word = json.load(open('embeddings/index2word.json', 'r'))
-    word_vecs = np.load("embeddings/word_vectors.npy", allow_pickle = True)
+    word_vecs = np.load("embeddings/word_vectors.npy", allow_pickle=True)
     word_vecs = normalize_rows(word_vecs)
     project(word_vecs, id2word)
-
-
-
-
-

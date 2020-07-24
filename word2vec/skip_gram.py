@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import init
 
+
 class SkipGram(nn.Module):
 
     def __init__(self, vocab_size, emb_dim):
@@ -19,7 +20,6 @@ class SkipGram(nn.Module):
         init.uniform_(self.context_embeddings.weight.data, -initrange, initrange)
 
     def forward(self, center_w, context_w, negative_ws):
-
         emb_u = self.center_embeddings(center_w)
         emb_v = self.context_embeddings(context_w)
         neg_s = self.context_embeddings(negative_ws)
@@ -32,19 +32,9 @@ class SkipGram(nn.Module):
 
         return torch.mean(pos_score + neg_score)
 
-    def save_embedding(self,file_name):
+    def save_embedding(self, file_name):
         u_emb = self.center_embeddings.weight.cpu().data.numpy()
         v_emb = self.context_embeddings.weight.cpu().data.numpy()
 
         word_embeddings = u_emb + v_emb
         word_embeddings.dump(file_name)
-
-
-
-
-
-
-
-
-
-
