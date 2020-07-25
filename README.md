@@ -29,18 +29,18 @@ A pipeline for training word embeddings using word2vec on web-scrapped corpus.
 Here are some awesome examples
 
 `python3 nearest_neighbors.py -word car -topk 5`
-* Top 1 nearest: cars, score 0.6715999841690063
-* Top 2 nearest: automobiles, score 0.5873000025749207
-* Top 3 nearest: vehicle, score 0.5860000252723694
-* Top 4 nearest: mileage, score 0.5827999711036682
-* Top 5 nearest: vehicles, score 0.5285999774932861
+* Top 1 nearest: cars, score 0.67
+* Top 2 nearest: automobiles, score 0.58
+* Top 3 nearest: vehicle, score 0.58
+* Top 4 nearest: mileage, score 0.58
+* Top 5 nearest: vehicles, score 0.52
 
 `python3 nearest_neighbors.py -word covid`
-* Top 1 nearest: coronavirus, score 0.6295999884605408
-* Top 2 nearest: outbreak, score 0.6101999878883362
-* Top 3 nearest: pandemic, score 0.5655999779701233
-* Top 4 nearest: cmeminsave, score 0.5457000136375427
-* Top 5 nearest: crisis, score 0.5364000201225281
+* Top 1 nearest: coronavirus, score 0.62
+* Top 2 nearest: outbreak, score 0.61
+* Top 3 nearest: pandemic, score 0.56
+* Top 4 nearest: cmeminsave, score 0.54
+* Top 5 nearest: crisis, score 0.53
 
 
 
